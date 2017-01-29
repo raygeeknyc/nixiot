@@ -1,7 +1,7 @@
 ﻿#!/bin/bash
 #
-# Copyright 2011 Google Inc. All Rights Reserved.
-# Author: raymondb@google.com (Raymond Blum)
+# Copyright 2011,2017 Google Inc. All Rights Reserved.
+# Author: raymond@insanegiantrobots.com (Raymond Blum)
 # Note: /dev/tty/ACM0 is the Bluetooth serial port you have connected to the Nixie board.
 # Mine is at 38400 local speed
 getnum() {

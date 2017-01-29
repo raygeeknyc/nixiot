@@ -1,7 +1,7 @@
 /***
  * @author("Raymond Blum" <raymond@insanegiantrobots.com>)
  *
- * Copyright (c) 2011 by Raymond Blum
+ * Copyright (c) 2011,2017 by Raymond Blum
  * This program code is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
