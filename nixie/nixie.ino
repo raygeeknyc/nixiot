@@ -53,19 +53,45 @@ boolean in_refresh_cycle;
 unsigned long int refresh_cycle_interval;
 unsigned long int refresh_cycle_step_duration;
 
+// Pins 7 and 8 are a hardware UART on a Teensy 2.0
+#define PIN_TX 7
+#define PIN_RX 8
 
+// Pin 11 is connected to the on-board LED, we resuse it
 #define PIN_LED 11
 #define PIN_SPEAKER 2
 #define PIN_SPOT1 21
 #define PIN_SPOT2 20
 
+#define PIN_0_A 15
+#define PIN_0_B 13
+#define PIN_0_C 12
+#define PIN_0_D 14
+
+#define PIN_1_A 10
+#define PIN_1_B 1
+#define PIN_1_C 0
+#define PIN_1_D 9
+
+#define PIN_2_A 16
+#define PIN_2_B 18
+#define PIN_3_C 19
+#define PIN_4_D 17
+
+#define PIN_3_A 6
+#define PIN_3_B 4
+#define PIN_3_C 3
+#define PIN_3_D 5
+
+#define PIN_0_PUNC 11
+#define PIN_1_PUNC 22
+#define PIN_2_PUNC 23
+#define PIN_3_PUNC 24
 
 #define DIGIT_INTERVAL 1000
 
-
 #define SPOT_INTERVAL 500
 #define SPOT_DURATION 500
-
 
 #define QUIET_TONE_FREQUENCY 0
 #define DEFAULT_TONE_FREQUENCY 225
@@ -73,9 +99,8 @@ unsigned long int refresh_cycle_step_duration;
 #define DEFAULT_TONE_INTERVAL 1800000  //30m
 
 
-// The Teensy 2.0 uses pins 7 and 8 for a hardware Uart which is connected to the Bluesmirf modem
+// The Teensy 2.0 hardware Uart is connected to the Bluesmirf modem
 HardwareSerial btSerial = HardwareSerial();
-
 
 unsigned long int when_digit;
 unsigned long int when_spot;
@@ -88,9 +113,7 @@ boolean spot_toggle;
 
 
 int counter;
-
-
-int digits[4][4] = {{15,13,12,14},{10,1,0,9},{16,18,19,17},{6,4,3,5}};
+int digits[4][4] = {{PIN_0_A,PIN_0_B,PIN_0_C,PIN_0_D},{PIN_1_A,PIN_1_B,PIN_1_C,PIN_1_D},{PIN_2_A,PIN_2_B,PIN_2_C,PIN_2_D},{PIN_3_A,PIN_3_B,PIN_3_C,PIN_3_D}};
 
 
 struct display_spec {
@@ -133,8 +156,6 @@ void setupPins() {
   pinMode(PIN_SPOT2, OUTPUT);
   digitalWrite(PIN_SPOT1, LOW);
   digitalWrite(PIN_SPOT2, LOW);
-
-
 }
 
 
@@ -149,7 +170,6 @@ void setDefaultDisplayValues() {
   current_refresh_digit_value = REFRESH_CYCLE_END_DIGIT;
 }
 
-
 void setInitialEventTimes() {
   when_digit = millis() + DIGIT_INTERVAL;
   when_spot = millis() + SPOT_INTERVAL;
@@ -161,12 +181,9 @@ void setInitialEventTimes() {
   when_refresh_cycle_step_end = millis() - 1;
 }
 
-
 void setup() {
   Serial.begin(SERIAL_SPEED);
   btSerial.begin(BT_SERIAL_SPEED);
-
-
   setupPins();
   counter = 0;
   setInitialEventTimes();
@@ -175,7 +192,6 @@ void setup() {
   pinMode(PIN_LED, OUTPUT);
   led_state = false;
 }
-
 
 void showPin(int digit, int pin, boolean state) {
   digitalWrite(digits[digit][pin], state?HIGH:LOW);
@@ -188,7 +204,6 @@ void showPin(int digit, int pin, boolean state) {
     Serial.print(" ");
   }
 }
-
 
 void showDigit(int digit, int value, boolean on_state) {
   int pin0 = value & 1;
@@ -204,12 +219,10 @@ void showDigit(int digit, int value, boolean on_state) {
   }
 }
 
-
 void blankDigit(int digit) {
   for (int pin=0;pin < 4;pin++)
     digitalWrite(digits[digit][pin], HIGH);
 }
-
 
 int DigitValue(const char value) {
   if (value >= '0' and value <= '9') {
@@ -219,12 +232,10 @@ int DigitValue(const char value) {
   }
 }
 
-
 void displayDigit(int digit, int value) {
   blankAllBut(digit);
   showDigit(digit, value, true);
 }
-
 
 void blankAllBut(int exempt) {
   for (int digit = 0; digit < 4; digit++) {
@@ -233,7 +244,6 @@ void blankAllBut(int exempt) {
     }
   }
 }
-
 
 int DigitPosition(int value, int digit_position) {
   int pos[4];
@@ -244,13 +254,11 @@ int DigitPosition(int value, int digit_position) {
   return pos[digit_position];
 }
 
-
 /** Are we in a refresh cycle step?
  */
 boolean inRefreshCycleStep() {
   return (millis() >= when_refresh_next_event && millis() < when_refresh_cycle_step_end);
 }
-
 
 struct display_spec* makeRefreshDisplay(char values[]) {
   struct display_spec *refresh_display;
@@ -265,7 +273,6 @@ struct display_spec* makeRefreshDisplay(char values[]) {
   return refresh_display;
 }
 
-
 /**
 Return a new refresh display spec if we have reached the next refresh display event else return null
 maintain the next refresh event and end of current step
@@ -273,7 +280,6 @@ maintain the next refresh event and end of current step
 struct display_spec* getNextRefreshDisplay() {
   if (millis() > when_refresh_next_event && millis() > when_refresh_cycle_step_end) {
     if (TRACE || DEBUG) { Serial.println("Next refresh event reached at: "); Serial.println(millis());}
-
 
     if (current_refresh_digit_value == REFRESH_CYCLE_END_DIGIT) {  // We're at the end of a cycle
       current_refresh_digit_value = REFRESH_CYCLE_START_DIGIT;
@@ -296,7 +302,6 @@ struct display_spec* getNextRefreshDisplay() {
     return 0l;
   } 
 }
-
 
 struct display_spec* getNewValueDisplay() {  
  struct display_spec *new_display = 0l;
@@ -339,14 +344,12 @@ struct display_spec* getNewValueDisplay() {
    numeric_value[4]='\0';
    new_display->tone_frequency = atoi(numeric_value);
 
-
    // read 7 bytes as our new tone duration value
    for (int i=0;i<7;i++) {
      numeric_value[i] = incoming_bytes[buffer_pos++];
    }
    numeric_value[7]='\0';
    new_display->tone_duration_ms = atol(numeric_value);
-
 
    // read 7 bytes as our new tone interval value
    for (int i=0;i<7;i++) {
@@ -355,7 +358,6 @@ struct display_spec* getNewValueDisplay() {
    numeric_value[7]='\0';
    new_display->tone_interval_ms = atol(numeric_value);
 
-
    // read 7 bytes as our new refresh interval value
    for (int i=0;i<7;i++) {
      numeric_value[i] = incoming_bytes[buffer_pos++];
@@ -363,14 +365,12 @@ struct display_spec* getNewValueDisplay() {
    numeric_value[7]='\0';
    refresh_cycle_interval = atol(numeric_value);
 
-
    // read 7 bytes as our new refresh cycle duration
    for (int i=0;i<7;i++) {
      numeric_value[i] = incoming_bytes[buffer_pos++];
    }
    numeric_value[7]='\0';
    refresh_cycle_step_duration = atol(numeric_value);
-
 
   if (TRACE || DEBUG) {
     Serial.print("New display parms read: {");
@@ -384,7 +384,6 @@ struct display_spec* getNewValueDisplay() {
   return new_display;
 }
 
-
 void pulseLed() {
   led_state = !led_state;
   digitalWrite(PIN_LED, led_state?HIGH:LOW);
@@ -393,7 +392,6 @@ void pulseLed() {
     Serial.println(led_state?"ON":"OFF");
   }
 }
-
 
 void writeDisplayValues(struct display_spec *display_values) {
   if (DEBUG || TRACE) {Serial.print("Display: "); Serial.print(display_values->value[0]);Serial.print(display_values->value[1]);Serial.print(display_values->value[2]);Serial.println(display_values->value[3]);}
@@ -406,26 +404,21 @@ void writeDisplayValues(struct display_spec *display_values) {
    
     if (display_values->spot_2 == 'Y'|| (display_values->spot_1 == 'T' && !spot_toggle)) {
       digitalWrite(PIN_SPOT2, HIGH);
-      delayMicroseconds(500);
-      
+      delayMicroseconds(500);  
     }
     digitalWrite(PIN_SPOT2, LOW);
   }
-
 
   for (int digit=0; digit<4; digit++) {
     displayDigit(digit,DigitValue(display_values->value[abs(3-digit)]));
     delay(5);
   }
- 
   if (when_spot <= millis()) {
     spot_toggle = !spot_toggle;
-    pulseLed();
     when_spot_stop = millis() + SPOT_DURATION;
     when_spot = millis() + SPOT_INTERVAL;
   }
 }
-
 
 void maintainRefreshDisplay() {
   struct display_spec *t;
@@ -444,7 +437,6 @@ void maintainRefreshDisplay() {
   }
 }
 
-
 void maintainValueDisplay() {
   struct display_spec *t;
   
@@ -462,23 +454,16 @@ void maintainValueDisplay() {
   }
 }
 
-
-
-
 void loop() {
-
-
   maintainRefreshDisplay();
-  maintainValueDisplay();
-  
+  maintainValueDisplay(); 
   if (inRefreshCycleStep()) {
     if (TRACE || DEBUG) { Serial.print("Refresh display "); }
     writeDisplayValues(refresh_display_spec);
   } else {
     if (TRACE || DEBUG) { Serial.print("Value display "); }
     writeDisplayValues(value_display_spec);
-  }
-  
+  } 
   if (when_tone <= millis()) {
     if (DEBUG || TRACE) { Serial.print("tone: "); Serial.print(value_display_spec->tone_frequency); Serial.print(" for: "); Serial.println(value_display_spec->tone_duration_ms);}
     tone(PIN_SPEAKER, value_display_spec->tone_frequency, value_display_spec->tone_duration_ms);
