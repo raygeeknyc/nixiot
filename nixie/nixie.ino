@@ -75,8 +75,8 @@ unsigned long int refresh_cycle_step_duration;
 
 #define PIN_2_A 16
 #define PIN_2_B 18
-#define PIN_3_C 19
-#define PIN_4_D 17
+#define PIN_2_C 19
+#define PIN_2_D 17
 
 #define PIN_3_A 6
 #define PIN_3_B 4
